@@ -1,0 +1,5 @@
+*~
+*.o
+spk
+libspk.*
+makeconfig.cfg
