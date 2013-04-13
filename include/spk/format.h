@@ -6,20 +6,17 @@
 #define SPK_MAGIC "SPK\xFF" // 'S' 'P' 'K' \xFF NUL
 #define SPK_MAGIC_LEN 5
 
-typedef enum
-{
-    SPK_T_FILE,
-    SPK_T_DIR
-} spk_filetype_t;
+#define SPK_T_FILE 0x01
+#define SPK_T_DIR  0x02
 
 typedef struct
 {
 	char name[255];
-	spk_filetype_t type;
+	uint8_t type;
 	uint16_t mode;
 	uint16_t uid;
 	uint16_t gid;
 	uint32_t length;
-} spk_fileheader_t;
+} __attribute__((packed)) spk_fileheader_t;
 
 #endif
