@@ -1,5 +1,6 @@
 *~
 *.o
 spk
+spk.exe
 libspk.*
 makeconfig.cfg
