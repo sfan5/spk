@@ -1,17 +1,13 @@
 #include <spk/spk.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <inttypes.h>
-#include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 short extract_spk(char *filename, char *outdir)
 {
-    return extract_spk_ex(filename, outdir, 0);
+    return extract_spk_ex(filename, outdir, false, false, false);
 }
 
-short extract_spk_ex(char *filename, char *outdir, short verbose)
+short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid_uid, bool ignore_mode)
 {
     FILE *f, *of;
     spk_fileheader_t *fh = malloc(sizeof(spk_fileheader_t));
@@ -48,13 +44,14 @@ short extract_spk_ex(char *filename, char *outdir, short verbose)
                 i++;
             }
             fclose(of);
-            chmod(outpath, (mode_t) fh->mode);
-            chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
+            if(fh->mode != 65535 && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
+            if(fh->uid != 65535 && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
         }
         else if(fh->type == SPK_T_DIR)
         {
-            mkdir(outpath, (mode_t) fh->mode);
-            chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
+            mkdir(outpath, 0777);
+            if(fh->mode != 65535 && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
+            if(fh->uid != 65535 && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
         }
         
         if(verbose) printf("%s\n", fh->name);

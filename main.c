@@ -3,10 +3,11 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <stdbool.h>
 #include <spk/spk.h>
 
 void print_usage();
-void recursive_add_to_array(char *array[], int *inlen, char *path, short verbose);
+void recursive_add_to_array(char *array[], int *inlen, char *path, bool verbose);
 
 int main(int argc, char *argv[])
 {
@@ -18,7 +19,24 @@ int main(int argc, char *argv[])
     }
     else
     {
-        short verbose = (strchr(argv[1], 'v') != NULL);
+        bool verbose = (strchr(argv[1], 'v') != NULL);
+        bool no_gid_uid = false, no_mode = false;
+        int i, archiven;
+        char *archivep;
+        for(i = 2; i < argc; i++)
+        {
+            if(argv[i][0] != '-')
+            {
+                archivep = argv[i];
+                archiven = i;
+                break;
+            }
+            
+            if(!strcmp(argv[i], "--no-uid-gid")) { no_gid_uid = true; continue; }
+            if(!strcmp(argv[i], "--no-mode")) { no_mode = true; continue; }
+            fprintf(stderr, "Unknown argument %s\n", argv[i]);
+        }
+        if(archivep == NULL) { fprintf(stderr, "No archive specified\n"); return EXIT_FAILURE; }
         switch(argv[1][0])
         {
             case 'c':
@@ -29,26 +47,26 @@ int main(int argc, char *argv[])
                 }
                 int i, inlen = 0;
                 char *in[4096];
-                for(i = 3; i < argc; i++)
+                for(i = archiven + 1; i < argc; i++)
                 {
                     recursive_add_to_array(in, &inlen, argv[i], verbose);
                 }
-                co = create_spk(argv[2], inlen, in);
-                if(co != SPK_E_OK) printf("%s\n", strerror_spk(co));
+                co = create_spk_ex(archivep, inlen, in, no_gid_uid, no_mode);
+                if(co != SPK_E_OK) fprintf(stderr, "%s\n", strerror_spk(co));
                 break;
             case 'x':
-                co = extract_spk_ex(argv[2], ".", verbose);
-                if(co != SPK_E_OK) printf("%s\n", strerror_spk(co));
+                co = extract_spk_ex(archivep, ".", verbose, no_gid_uid, no_mode);
+                if(co != SPK_E_OK) fprintf(stderr, "%s\n", strerror_spk(co));
                 break;
             default:
-                printf("Unknown operation %c\n", argv[1][0]);
+                fprintf(stderr, "Unknown operation %c\n", argv[1][0]);
                 break;
         }
     }
     return (co == 0)?EXIT_SUCCESS:EXIT_FAILURE;
 }
 
-void recursive_add_to_array(char *array[], int *inlen, char *path, short verbose)
+void recursive_add_to_array(char *array[], int *inlen, char *path, bool verbose)
 {
     DIR *d;
     struct dirent *entry;
@@ -96,10 +114,14 @@ void print_usage()
 #else
     const char *cv = "unknown compiler";
 #endif
-    printf("spk version 0.1 (compiled %s %s with %s %s)\n", __DATE__, __TIME__, cv, __VERSION__); 
-    printf("Usage: spk [cx][v] <archive> [files] ...\n");
+    printf("spk version 0.1.7 (compiled %s %s with %s %s)\n", __DATE__, __TIME__, cv, __VERSION__); 
+    printf("Usage: spk (cx)[v] [options] <archive> [files] ...\n");
     printf("spk packs files and directories in a developer-friendly format.\n\n");
+    printf("Valid options:\n");
+    printf("  --no-uid-gid          Doesn't save User ID and Group ID to archive\n");
+    printf("  --no-mode             Doesn't save Access mode to archive\n");
+    printf("\n");
     printf("Examples:\n");
-    printf("  spk cv example.spk foo bar    # Create example.spk with the files foo and bar\n");
-    printf("  spk x  archive.spk            # Extract archive.spk\n");
+    printf("  spk cv example.spk foo bar        # Create example.spk with the files foo and bar\n");
+    printf("  spk x --no-uid-gid archive.spk    # Extract archive.spk without setting UID and GID\n");
 }

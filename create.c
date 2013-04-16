@@ -1,10 +1,12 @@
 #include <spk/spk.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
 
 short create_spk(char *outfile, int inlen, char *in[])
+{
+    return create_spk_ex(outfile, inlen, in, false, false);
+}
+
+short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool no_mode)
 {
     FILE *of, *f;
     of = fopen(outfile, "wb");
@@ -18,15 +20,23 @@ short create_spk(char *outfile, int inlen, char *in[])
     for(i = 0; i < inlen; i++)
     {
         stat(in[i], &s);
+        if(no_mode) fh->mode = 65535; else fh->mode = (uint16_t) s.st_mode;
+        if(no_gid_uid)
+        {
+            fh->uid = 65535;
+            fh->gid = 65535;
+        }
+        else
+        {
+            fh->uid = (uint16_t) s.st_uid;
+            fh->gid = (uint16_t) s.st_gid;
+        }
         if(s.st_mode & S_IFDIR)
         { // Directory
            memset(fh->name, 0, 255);
            strcpy(fh->name, in[i]);
            fh->type = SPK_T_DIR;
            fh->length = 0;
-           fh->mode = (uint16_t) s.st_mode;
-           fh->uid = (uint16_t) s.st_uid;
-           fh->gid = (uint16_t) s.st_gid;
            fwrite(fh, sizeof(spk_fileheader_t), 1, of);
         }
         else if(s.st_mode & S_IFREG)
@@ -37,9 +47,6 @@ short create_spk(char *outfile, int inlen, char *in[])
             f = fopen(in[i], "rb");
             if(f == NULL) return SPK_E_FAILEDOPEN;
             fh->length = (uint32_t) s.st_size;
-            fh->mode = (uint16_t) s.st_mode;
-            fh->uid = (uint16_t) s.st_uid;
-            fh->gid = (uint16_t) s.st_gid;
             fwrite(fh, sizeof(spk_fileheader_t), 1, of);
             for(j = 0; j < fh->length; j++)
             {

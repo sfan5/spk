@@ -63,5 +63,7 @@ while True:
     else:
         print("Unknown type " + str(ty))
         exit(1)
-    os.chown(p, uid, gid)
-    os.chmod(p, mode)
+    if gid != 65535:
+        os.chown(p, uid, gid)
+    if mode != 65535:
+        os.chmod(p, mode)
