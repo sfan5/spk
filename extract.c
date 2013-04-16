@@ -44,14 +44,14 @@ short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid
                 i++;
             }
             fclose(of);
-            if(fh->mode != 65535 && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
-            if(fh->uid != 65535 && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
+            if(fh->mode != 0xffff && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
+            if(fh->uid != 0xffff && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
         }
         else if(fh->type == SPK_T_DIR)
         {
             mkdir(outpath, 0777);
-            if(fh->mode != 65535 && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
-            if(fh->uid != 65535 && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
+            if(fh->mode != 0xffff && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
+            if(fh->uid != 0xffff && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
         }
         
         if(verbose) printf("%s\n", fh->name);

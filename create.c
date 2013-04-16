@@ -20,11 +20,11 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
     for(i = 0; i < inlen; i++)
     {
         stat(in[i], &s);
-        if(no_mode) fh->mode = 65535; else fh->mode = (uint16_t) s.st_mode;
+        if(no_mode) fh->mode = 0xffff; else fh->mode = (uint16_t) s.st_mode;
         if(no_gid_uid)
         {
-            fh->uid = 65535;
-            fh->gid = 65535;
+            fh->uid = 0xffff;
+            fh->gid = 0xffff;
         }
         else
         {
