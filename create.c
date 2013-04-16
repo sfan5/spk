@@ -21,6 +21,7 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
     {
         stat(in[i], &s);
         if(no_mode) fh->mode = 0xffff; else fh->mode = (uint16_t) s.st_mode;
+#ifndef _WIN32
         if(no_gid_uid)
         {
             fh->uid = 0xffff;
@@ -31,6 +32,10 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
             fh->uid = (uint16_t) s.st_uid;
             fh->gid = (uint16_t) s.st_gid;
         }
+#else
+        fh->uid = 0xffff;
+        fh->gid = 0xffff;
+#endif
         if(s.st_mode & S_IFDIR)
         { // Directory
            memset(fh->name, 0, 255);

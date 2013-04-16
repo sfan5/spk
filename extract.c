@@ -15,7 +15,7 @@ short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid
     uint32_t i;
     char temp1[SPK_MAGIC_LEN];
     const char* temp2 = SPK_MAGIC;
-    
+
     f = fopen(filename, "rb");
     if(f == NULL) return SPK_E_FAILEDOPEN;
     fread(temp1, SPK_MAGIC_LEN, 1, f);
@@ -24,7 +24,7 @@ short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid
     {
         i = (uint32_t) fgetc(f);
         if(feof(f)) break; else ungetc((int) i, f);
-        
+
         fread(fh, sizeof(spk_fileheader_t), 1, f);
         if(fh->type != SPK_T_FILE && fh->type != SPK_T_DIR) return SPK_E_CORRUPTFILE;
         if(fh->type == SPK_T_DIR && fh->length != 0) return SPK_E_CORRUPTFILE;
@@ -45,13 +45,21 @@ short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid
             }
             fclose(of);
             if(fh->mode != 0xffff && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
+#ifndef _WIN32
             if(fh->uid != 0xffff && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
+#endif
         }
         else if(fh->type == SPK_T_DIR)
         {
+#ifdef _WIN32
+            mkdir(outpath);
+#else
             mkdir(outpath, 0777);
+#endif
             if(fh->mode != 0xffff && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
+#ifndef _WIN32
             if(fh->uid != 0xffff && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
+#endif
         }
         
         if(verbose) printf("%s\n", fh->name);
