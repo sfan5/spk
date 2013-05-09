@@ -73,6 +73,7 @@ void recursive_add_to_array(char *array[], int *inlen, char *path, bool verbose)
     struct stat s;
     stat(path, &s);
     if(path[strlen(path) - 1] == '.') return;
+    if(path[strlen(path) - 1] == '/') path[strlen(path) - 1] = 0;
     if(s.st_mode & S_IFDIR)
     { // Directory
         if(verbose) printf("%s\n", path);
