@@ -10,6 +10,7 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
 {
     FILE *of, *f;
     of = fopen(outfile, "wb");
+    if(of == NULL) return SPK_E_FAILEDOPEN;
     const char* temp1 = SPK_MAGIC;
     struct stat s;
     int i;
