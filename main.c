@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
                     return EXIT_SUCCESS;
                 }
                 int i, inlen = 0;
-                char *in[4096];
+                char *in[8192];
                 for(i = archiven + 1; i < argc; i++)
                 {
                     recursive_add_to_array(in, &inlen, argv[i], verbose);
