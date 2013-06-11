@@ -98,6 +98,14 @@ void recursive_add_to_array(char *array[], int *inlen, char *path, bool verbose)
         array[*inlen] = path;
         *inlen += 1;
     }
+#ifndef _WIN32
+    else if(s.st_mode & S_IFLNK)
+    { // Symlink
+        if(verbose) printf("%s\n", path);
+        array[*inlen] = path;
+        *inlen += 1;
+    }
+#endif
     else
     {
         fprintf(stderr, "Warning: cannot archive %s\n", path);
@@ -106,7 +114,7 @@ void recursive_add_to_array(char *array[], int *inlen, char *path, bool verbose)
 
 void print_usage()
 {
-#ifdef __clang__
+#if defined(__clang__)
     const char *cv = "Clang";
 #elif defined(__GNUC__)
     const char *cv = "gcc";
@@ -115,7 +123,7 @@ void print_usage()
 #else
     const char *cv = "unknown compiler";
 #endif
-    printf("spk version 0.1.7 (compiled %s %s with %s %s)\n", __DATE__, __TIME__, cv, __VERSION__); 
+    printf("spk version 0.1.8 (compiled %s %s with %s %s)\n", __DATE__, __TIME__, cv, __VERSION__); 
     printf("Usage: spk (cx)[v] [options] <archive> [files] ...\n");
     printf("spk packs files and directories in a developer-friendly format.\n\n");
     printf("Valid options:\n");

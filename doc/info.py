@@ -20,6 +20,7 @@ if hdr[0] != 'S' or hdr[1] != 'P' or hdr[2] != 'K' or ord(hdr[3]) != 255 or ord(
     
 numfiles = 0
 numdirs = 0
+numlinks = 0
 biggestfile = ("", -1)
 while True:
     p = f.read(255)
@@ -48,6 +49,8 @@ while True:
         numfiles += 1
     elif ty == 2: # Directory
         numdirs += 1
+    elif ty == 3:
+        numlinks += 1
     else:
         print("Unknown type " + str(ty))
         exit(1)
@@ -56,5 +59,5 @@ while True:
     f.read(length)
 
 print("")
-print("%d files, %d directories" % (numfiles, numdirs))
+print("%d files, %d directories, %d symlinks" % (numfiles, numdirs, numlinks))
 print("Biggest file '%s' with %ld bytes" % biggestfile)    

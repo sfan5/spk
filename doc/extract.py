@@ -60,6 +60,8 @@ while True:
         of.close()
     elif ty == 2: # Directory
         os.mkdir(p)
+    elif ty == 3: # Symlink
+        os.symlink(f.read(length), p)
     else:
         print("Unknown type " + str(ty))
         exit(1)

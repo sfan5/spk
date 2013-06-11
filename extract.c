@@ -1,6 +1,7 @@
 #include <spk/spk.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
 
 short extract_spk(char *filename, char *outdir)
 {
@@ -62,6 +63,23 @@ short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid
             if(fh->uid != 0xffff && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
 #endif
         }
+#ifndef _WIN32
+        else if(fh->type == SPK_T_SYMLINK)
+        {
+            char *dest = (char*) malloc(fh->length);
+            fread(dest, fh->length, 1, f);
+            symlink(dest, outpath);
+            if(fh->mode != 0xffff && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
+            if(fh->uid != 0xffff && !ignore_gid_uid) chown(outpath, (uid_t) fh->uid, (gid_t) fh->gid);
+        }
+#else
+        else if(fh->type == SPK_T_SYMLINK)
+        {
+            fprintf(stderr, "WARN: Symlinks are not supported on Windows\n");
+        }
+#endif
+        else return SPK_E_CORRUPTFILE;
+        
         
         if(verbose) printf("%s\n", fh->name);
     }

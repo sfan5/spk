@@ -1,5 +1,28 @@
 #include <spk/spk.h>
 #include <stdlib.h>
+#include <unistd.h>
+
+#ifndef _WIN32
+char *readlink_malloc(const char *filename)
+{
+    int size = 10;
+    char *buffer = NULL;
+
+    while(1)
+    {
+        buffer = (char*) realloc(buffer, size);
+        int nchars = readlink(filename, buffer, size);
+        if(nchars < 0)
+        {
+            free(buffer);
+            return NULL;
+        }
+        if(nchars < size)
+            return buffer;
+        size += 10;
+    }
+}
+#endif
 
 short create_spk(char *outfile, int inlen, char *in[])
 {
@@ -60,6 +83,20 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
             }
             fclose(f);
         }
+#ifndef _WIN32
+        else if(s.st_mode & S_IFLNK)
+        { // Symlink
+            memset(fh->name, 0, 255);
+            strcpy(fh->name, in[i]);
+            fh->type = SPK_T_SYMLINK;
+            char *dest = readlink_malloc(in[i]);
+            if(dest == NULL) return SPK_E_FAILEDOPEN;
+            fh->length = (uint32_t) strlen(dest);
+            fwrite(fh, sizeof(spk_fileheader_t), 1, of);
+            fwrite(dest, strlen(dest), 1, of);
+            free(dest);
+        }
+#endif
     }
     fclose(of);
     return SPK_E_OK;
