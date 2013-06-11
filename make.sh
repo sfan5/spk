@@ -12,6 +12,6 @@ for obj in $SRCS; do
     OBJS="${OBJS} ${obj%.*}$OBJEXT"
 done
 echo "LD	spk${EXEEXT}"
-${CROSS_PREFIX}gcc main${OBJEXT} $OBJS -o spk$EXEEXT || exit 1
+${CROSS_PREFIX}gcc ${LDFLAGS} main${OBJEXT} $OBJS -o spk$EXEEXT || exit 1
 echo "AR	libspk${LIBEXT}"
 ${CROSS_PREFIX}ar rcs libspk$LIBEXT $OBJS || exit 1
