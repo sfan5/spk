@@ -8,7 +8,7 @@
 
 #define SPK_T_FILE 0x01
 #define SPK_T_DIR  0x02
-#define SPK_T_SYMLINK  0x02
+#define SPK_T_SYMLINK  0x03
 
 typedef struct
 {
