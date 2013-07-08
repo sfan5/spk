@@ -39,11 +39,11 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
     int i;
     uint32_t j;
     spk_fileheader_t *fh = malloc(sizeof(spk_fileheader_t));
-    
+
     fwrite(temp1, SPK_MAGIC_LEN, 1, of);
     for(i = 0; i < inlen; i++)
     {
-        stat(in[i], &s);
+        lstat(in[i], &s);
         if(no_mode) fh->mode = 0xffff; else fh->mode = (uint16_t) s.st_mode;
 #ifndef _WIN32
         if(no_gid_uid)
@@ -68,6 +68,20 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
            fh->length = 0;
            fwrite(fh, sizeof(spk_fileheader_t), 1, of);
         }
+#ifndef _WIN32
+        else if(s.st_mode & S_IFLNK)
+        { // Symlink
+            memset(fh->name, 0, 255);
+            strcpy(fh->name, in[i]);
+            fh->type = SPK_T_SYMLINK;
+            char *dest = readlink_malloc(in[i]);
+            if(dest == NULL) return SPK_E_FAILEDOPEN;
+            fh->length = (uint32_t) strlen(dest);
+            fwrite(fh, sizeof(spk_fileheader_t), 1, of);
+            fwrite(dest, strlen(dest), 1, of);
+            free(dest);
+        }
+#endif
         else if(s.st_mode & S_IFREG)
         { // File
             memset(fh->name, 0, 255);
@@ -83,20 +97,6 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
             }
             fclose(f);
         }
-#ifndef _WIN32
-        else if(s.st_mode & S_IFLNK)
-        { // Symlink
-            memset(fh->name, 0, 255);
-            strcpy(fh->name, in[i]);
-            fh->type = SPK_T_SYMLINK;
-            char *dest = readlink_malloc(in[i]);
-            if(dest == NULL) return SPK_E_FAILEDOPEN;
-            fh->length = (uint32_t) strlen(dest);
-            fwrite(fh, sizeof(spk_fileheader_t), 1, of);
-            fwrite(dest, strlen(dest), 1, of);
-            free(dest);
-        }
-#endif
     }
     fclose(of);
     return SPK_E_OK;

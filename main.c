@@ -7,7 +7,7 @@
 #include <spk/spk.h>
 
 void print_usage();
-void recursive_add_to_array(char *array[], int *inlen, char *path, bool verbose);
+void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, char *path, bool verbose);
 
 int main(int argc, char *argv[])
 {
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
                 archiven = i;
                 break;
             }
-            
+
             if(!strcmp(argv[i], "--no-uid-gid")) { no_gid_uid = true; continue; }
             if(!strcmp(argv[i], "--no-mode")) { no_mode = true; continue; }
             fprintf(stderr, "Unknown argument %s\n", argv[i]);
@@ -45,11 +45,11 @@ int main(int argc, char *argv[])
                     print_usage();
                     return EXIT_SUCCESS;
                 }
-                int i, inlen = 0;
-                char *in[8192];
+                int i, inlen = 0, maxlen = 64;
+                char *in[64];
                 for(i = archiven + 1; i < argc; i++)
                 {
-                    recursive_add_to_array(in, &inlen, argv[i], verbose);
+                    recursive_add_to_array(in, &inlen, &maxlen, argv[i], verbose);
                 }
                 co = create_spk_ex(archivep, inlen, in, no_gid_uid, no_mode);
                 if(co != SPK_E_OK) fprintf(stderr, "%s\n", strerror_spk(co));
@@ -66,14 +66,19 @@ int main(int argc, char *argv[])
     return (co == 0)?EXIT_SUCCESS:EXIT_FAILURE;
 }
 
-void recursive_add_to_array(char *array[], int *inlen, char *path, bool verbose)
+void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, char *path, bool verbose)
 {
     DIR *d;
     struct dirent *entry;
     struct stat s;
-    stat(path, &s);
+    lstat(path, &s);
     if(path[strlen(path) - 1] == '.') return;
     if(path[strlen(path) - 1] == '/') path[strlen(path) - 1] = 0;
+    if(inlen == inmaxlen)
+    {
+        *inmaxlen += 10;
+        array = realloc(array, *inmaxlen);
+    }
     if(s.st_mode & S_IFDIR)
     { // Directory
         if(verbose) printf("%s\n", path);
@@ -88,7 +93,7 @@ void recursive_add_to_array(char *array[], int *inlen, char *path, bool verbose)
             strcat(newpath, path);
             strcat(newpath, "/");
             strcat(newpath, entry->d_name);
-            recursive_add_to_array(array, inlen, newpath, verbose);
+            recursive_add_to_array(array, inlen, inmaxlen, newpath, verbose);
         }
         closedir(d);
     }

@@ -27,7 +27,6 @@ short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid
         if(feof(f)) break; else ungetc((int) i, f);
 
         fread(fh, sizeof(spk_fileheader_t), 1, f);
-        if(fh->type != SPK_T_FILE && fh->type != SPK_T_DIR) return SPK_E_CORRUPTFILE;
         if(fh->type == SPK_T_DIR && fh->length != 0) return SPK_E_CORRUPTFILE;
         if(fh->name[0] == '/') return SPK_E_CORRUPTFILE;
         memset(outpath, 0, 512);
