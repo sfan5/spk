@@ -128,7 +128,7 @@ void print_usage()
 #else
     const char *cv = "unknown compiler";
 #endif
-    printf("spk version 0.1.8 (compiled %s %s with %s %s)\n", __DATE__, __TIME__, cv, __VERSION__); 
+    printf("spk version " SPK_VERSION_S " (compiled %s %s with %s %s)\n", __DATE__, __TIME__, cv, __VERSION__); 
     printf("Usage: spk (cx)[v] [options] <archive> [files] ...\n");
     printf("spk packs files and directories in a developer-friendly format.\n\n");
     printf("Valid options:\n");
