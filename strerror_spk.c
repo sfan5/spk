@@ -11,7 +11,7 @@ const char* strerror_spk(short e)
             return "Not an .spk file";
             break;
         case SPK_E_CORRUPTFILE:
-            return "Corrupt .spk file";
+            return "Corrupt/Invalid .spk file";
             break;
         case SPK_E_FAILEDOPEN:
             return "Failed to open file/directory";
