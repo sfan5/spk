@@ -43,7 +43,11 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
     fwrite(temp1, SPK_MAGIC_LEN, 1, of);
     for(i = 0; i < inlen; i++)
     {
+#ifdef _WIN32
+        stat(in[i], &s);
+#else
         lstat(in[i], &s);
+#endif
         if(no_mode) fh->mode = 0xffff; else fh->mode = (uint16_t) s.st_mode;
 #ifndef _WIN32
         if(no_gid_uid)

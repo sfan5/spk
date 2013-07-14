@@ -71,7 +71,11 @@ void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, char *path
     DIR *d;
     struct dirent *entry;
     struct stat s;
+#ifdef _WIN32
+    stat(path, &s);
+#else
     lstat(path, &s);
+#endif
     if(path[strlen(path) - 1] == '.') return;
     if(path[strlen(path) - 1] == '/') path[strlen(path) - 1] = 0;
     if(inlen == inmaxlen)
