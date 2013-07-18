@@ -73,7 +73,7 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
            fwrite(fh, sizeof(spk_fileheader_t), 1, of);
         }
 #ifndef _WIN32
-        else if(s.st_mode & S_IFLNK)
+        else if(S_ISLNK(s.st_mode))
         { // Symlink
             memset(fh->name, 0, 255);
             strcpy(fh->name, in[i]);
