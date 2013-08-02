@@ -39,6 +39,7 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
     int i;
     uint32_t j;
     spk_fileheader_t *fh = malloc(sizeof(spk_fileheader_t));
+    if(fh == NULL) return SPK_E_UNKNOWN;
 
     fwrite(temp1, SPK_MAGIC_LEN, 1, of);
     for(i = 0; i < inlen; i++)
@@ -103,5 +104,6 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
         }
     }
     fclose(of);
+    free(fh);
     return SPK_E_OK;
 }

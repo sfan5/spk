@@ -7,7 +7,7 @@
 #include <spk/spk.h>
 
 void print_usage();
-void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, char *path, bool verbose);
+void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char *path, bool verbose);
 
 int main(int argc, char *argv[])
 {
@@ -45,13 +45,21 @@ int main(int argc, char *argv[])
                     print_usage();
                     return EXIT_SUCCESS;
                 }
-                int i, inlen = 0, maxlen = 64;
-                char *in[64];
+                int i, inlen = 0, maxlen = 1024;
+                char **in;
+                in = malloc(maxlen * sizeof(char*));
+                if(in == NULL)
+                {
+                    fprintf(stderr, "Not enough memory available\n");
+                    return EXIT_FAILURE;
+                }
                 for(i = archiven + 1; i < argc; i++)
                 {
+                    if(argv[i][strlen(argv[i]) - 1] == '/') argv[i][strlen(argv[i]) - 1] = 0;
                     recursive_add_to_array(in, &inlen, &maxlen, argv[i], verbose);
                 }
                 co = create_spk_ex(archivep, inlen, in, no_gid_uid, no_mode);
+                free(in);
                 if(co != SPK_E_OK) fprintf(stderr, "%s\n", strerror_spk(co));
                 break;
             case 'x':
@@ -66,7 +74,7 @@ int main(int argc, char *argv[])
     return (co == 0)?EXIT_SUCCESS:EXIT_FAILURE;
 }
 
-void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, char *path, bool verbose)
+void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char *path, bool verbose)
 {
     DIR *d;
     struct dirent *entry;
@@ -77,26 +85,28 @@ void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, char *path
     lstat(path, &s);
 #endif
     if(path[strlen(path) - 1] == '.') return;
-    if(path[strlen(path) - 1] == '/') path[strlen(path) - 1] = 0;
-    if(inlen == inmaxlen)
+    if(*inlen == *inmaxlen)
     {
         *inmaxlen += 10;
         array = realloc(array, *inmaxlen);
+        if(array == NULL) { fprintf(stderr, "Not enough memory available, expect a segfault\n"); return; }
     }
     if(s.st_mode & S_IFDIR)
     { // Directory
         if(verbose) printf("%s\n", path);
-        array[*inlen] = path;
+        array[*inlen] = (char*) path;
         *inlen += 1;
         d = opendir(path);
         if(d == NULL) { fprintf(stderr, "Warning: Could not open %s\n", path); return; }
         while((entry = readdir(d)) != NULL)
         {
+            if(entry->d_name[0] == '.') continue;
             char *newpath = malloc(255);
+            if(newpath == NULL) { fprintf(stderr, "Not enough memory available, expect an incomplete archive\n"); continue; }
             memset(newpath, 0, 255);
-            strcat(newpath, path);
-            strcat(newpath, "/");
-            strcat(newpath, entry->d_name);
+            strncat(newpath, path, 254);
+            strncat(newpath, "/", 254 - strlen(newpath));
+            strncat(newpath, entry->d_name, 254 - strlen(newpath));
             recursive_add_to_array(array, inlen, inmaxlen, newpath, verbose);
         }
         closedir(d);
@@ -104,14 +114,14 @@ void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, char *path
     else if(s.st_mode & S_IFREG)
     { // File
         if(verbose) printf("%s\n", path);
-        array[*inlen] = path;
+        array[*inlen] = (char*) path;
         *inlen += 1;
     }
 #ifndef _WIN32
     else if(s.st_mode & S_IFLNK)
     { // Symlink
         if(verbose) printf("%s\n", path);
-        array[*inlen] = path;
+        array[*inlen] = (char*) path;
         *inlen += 1;
     }
 #endif
