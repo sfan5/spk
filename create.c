@@ -26,10 +26,10 @@ char *readlink_malloc(const char *filename)
 
 short create_spk(char *outfile, int inlen, char *in[])
 {
-    return create_spk_ex(outfile, inlen, in, false, false);
+    return create_spk_ex(outfile, inlen, in, false, false, false);
 }
 
-short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool no_mode)
+short create_spk_ex(char *outfile, int inlen, char *in[], bool verbose, bool no_gid_uid, bool no_mode)
 {
     FILE *of, *f;
     of = fopen(outfile, "wb");
@@ -102,6 +102,7 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool 
             }
             fclose(f);
         }
+        printf("%s\n", in[i]);
     }
     fclose(of);
     free(fh);

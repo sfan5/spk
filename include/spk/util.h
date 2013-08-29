@@ -13,6 +13,6 @@ const char* strerror_spk(short e);
 short extract_spk(char *filename, char *outdir);
 short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid_uid, bool ignore_mode);
 short create_spk(char *outfile, int inlen, char *in[]);
-short create_spk_ex(char *outfile, int inlen, char *in[], bool no_gid_uid, bool no_mode);
+short create_spk_ex(char *outfile, int inlen, char *in[], bool verbose, bool no_gid_uid, bool no_mode);
 
 #endif

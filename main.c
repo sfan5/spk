@@ -7,7 +7,7 @@
 #include <spk/spk.h>
 
 void print_usage();
-void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char *path, bool verbose);
+void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char *path);
 
 int main(int argc, char *argv[])
 {
@@ -56,9 +56,9 @@ int main(int argc, char *argv[])
                 for(i = archiven + 1; i < argc; i++)
                 {
                     if(argv[i][strlen(argv[i]) - 1] == '/') argv[i][strlen(argv[i]) - 1] = 0;
-                    recursive_add_to_array(in, &inlen, &maxlen, argv[i], verbose);
+                    recursive_add_to_array(in, &inlen, &maxlen, argv[i]);
                 }
-                co = create_spk_ex(archivep, inlen, in, no_gid_uid, no_mode);
+                co = create_spk_ex(archivep, inlen, in, verbose, no_gid_uid, no_mode);
                 free(in);
                 if(co != SPK_E_OK) fprintf(stderr, "%s\n", strerror_spk(co));
                 break;
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     return (co == 0)?EXIT_SUCCESS:EXIT_FAILURE;
 }
 
-void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char *path, bool verbose)
+void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char *path)
 {
     DIR *d;
     struct dirent *entry;
@@ -93,7 +93,6 @@ void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char
     }
     if(s.st_mode & S_IFDIR)
     { // Directory
-        if(verbose) printf("%s\n", path);
         array[*inlen] = (char*) path;
         *inlen += 1;
         d = opendir(path);
@@ -107,20 +106,18 @@ void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char
             strncat(newpath, path, 254);
             strncat(newpath, "/", 254 - strlen(newpath));
             strncat(newpath, entry->d_name, 254 - strlen(newpath));
-            recursive_add_to_array(array, inlen, inmaxlen, newpath, verbose);
+            recursive_add_to_array(array, inlen, inmaxlen, newpath);
         }
         closedir(d);
     }
     else if(s.st_mode & S_IFREG)
     { // File
-        if(verbose) printf("%s\n", path);
         array[*inlen] = (char*) path;
         *inlen += 1;
     }
 #ifndef _WIN32
     else if(s.st_mode & S_IFLNK)
     { // Symlink
-        if(verbose) printf("%s\n", path);
         array[*inlen] = (char*) path;
         *inlen += 1;
     }
