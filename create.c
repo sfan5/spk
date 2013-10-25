@@ -68,7 +68,7 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool verbose, bool no_
         if(s.st_mode & S_IFDIR)
         { // Directory
            memset(fh->name, 0, 255);
-           strcpy(fh->name, in[i]);
+           strncpy(fh->name, in[i], 254);
            fh->type = SPK_T_DIR;
            fh->length = 0;
            fwrite(fh, sizeof(spk_fileheader_t), 1, of);
@@ -77,7 +77,7 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool verbose, bool no_
         else if(S_ISLNK(s.st_mode))
         { // Symlink
             memset(fh->name, 0, 255);
-            strcpy(fh->name, in[i]);
+            strncpy(fh->name, in[i], 254);
             fh->type = SPK_T_SYMLINK;
             char *dest = readlink_malloc(in[i]);
             if(dest == NULL) return SPK_E_FAILEDOPEN;
@@ -90,7 +90,7 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool verbose, bool no_
         else if(s.st_mode & S_IFREG)
         { // File
             memset(fh->name, 0, 255);
-            strcpy(fh->name, in[i]);
+            strncpy(fh->name, in[i], 254);
             fh->type = SPK_T_FILE;
             f = fopen(in[i], "rb");
             if(f == NULL) return SPK_E_FAILEDOPEN;
