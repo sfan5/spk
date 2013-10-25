@@ -6,8 +6,15 @@
 #include <stdbool.h>
 #include <spk/spk.h>
 
+typedef struct ll_node {
+    const char *v;
+    struct ll_node *next;
+} ll_node;
+
+inline void ll_add(ll_node *array, const char *v);
+
 void print_usage();
-void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char *path);
+void recursive_add_to_array(ll_node *array, const char *path);
 
 int main(int argc, char *argv[])
 {
@@ -45,21 +52,50 @@ int main(int argc, char *argv[])
                     print_usage();
                     return EXIT_SUCCESS;
                 }
-                int i, inlen = 0, maxlen = 1024;
-                char **in;
-                in = malloc(maxlen * sizeof(char*));
+                int i, len;
+                ll_node *in, *cur, *tmp;
+                char **arr;
+
+                in = malloc(sizeof(ll_node));
                 if(in == NULL)
                 {
                     fprintf(stderr, "Not enough memory available\n");
                     return EXIT_FAILURE;
                 }
+                in->next = NULL;
+                in->v = (const char*) NULL;
+
                 for(i = archiven + 1; i < argc; i++)
                 {
                     if(argv[i][strlen(argv[i]) - 1] == '/') argv[i][strlen(argv[i]) - 1] = 0;
-                    recursive_add_to_array(in, &inlen, &maxlen, argv[i]);
+                    recursive_add_to_array(in, argv[i]);
                 }
-                co = create_spk_ex(archivep, inlen, in, verbose, no_gid_uid, no_mode);
-                free(in);
+
+                cur = in;
+                len = 0;
+                while((cur = cur->next) != NULL)
+                    len++;
+                len++;
+
+                arr = malloc(len * sizeof(char*));
+                if(arr == NULL)
+                {
+                    fprintf(stderr, "Not enough memory available\n");
+                    return EXIT_FAILURE;
+                }
+                cur = in;
+                i = 0;
+                while(cur != NULL)
+                {
+                    arr[i] = (char*) cur->v;
+                    i++;
+                    tmp = cur;
+                    cur = cur->next;
+                    free(tmp);
+                }
+
+                co = create_spk_ex(archivep, len, arr, verbose, no_gid_uid, no_mode);
+                free(arr);
                 if(co != SPK_E_OK) fprintf(stderr, "%s\n", strerror_spk(co));
                 break;
             case 'x':
@@ -71,10 +107,33 @@ int main(int argc, char *argv[])
                 break;
         }
     }
-    return (co == 0)?EXIT_SUCCESS:EXIT_FAILURE;
+    return (co == SPK_E_OK)?EXIT_SUCCESS:EXIT_FAILURE;
 }
 
-void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char *path)
+inline void ll_add(ll_node *array, const char *v)
+{
+    ll_node *c, *n;
+    c = array;
+    while(1)
+    {
+        if(c->v == NULL)
+        {
+            c->v = v;
+            return;
+        }
+        if(c->next == NULL)
+            break;
+        c = c->next;
+    }
+    n = malloc(sizeof(ll_node));
+    if(n == NULL)
+        fprintf(stderr, "Not enough memory available!\n");
+    n->v = v;
+    n->next = NULL;
+    c->next = n;
+}
+
+void recursive_add_to_array(ll_node *array, const char *path)
 {
     DIR *d;
     struct dirent *entry;
@@ -85,42 +144,29 @@ void recursive_add_to_array(char *array[], int *inlen, int *inmaxlen, const char
     lstat(path, &s);
 #endif
     if(path[strlen(path) - 1] == '.') return;
-    if(*inlen == *inmaxlen)
-    {
-        *inmaxlen += 10;
-        array = realloc(array, *inmaxlen);
-        if(array == NULL) { fprintf(stderr, "Not enough memory available, expect a segfault\n"); return; }
-    }
     if(s.st_mode & S_IFDIR)
     { // Directory
-        array[*inlen] = (char*) path;
-        *inlen += 1;
+        ll_add(array, path);
         d = opendir(path);
         if(d == NULL) { fprintf(stderr, "Warning: Could not open %s\n", path); return; }
         while((entry = readdir(d)) != NULL)
         {
             if(entry->d_name[0] == '.') continue;
             char *newpath = malloc(255);
-            if(newpath == NULL) { fprintf(stderr, "Not enough memory available, expect an incomplete archive\n"); continue; }
+            if(newpath == NULL) { fprintf(stderr, "Not enough memory available!\n"); continue; }
             memset(newpath, 0, 255);
             strncat(newpath, path, 254);
             strncat(newpath, "/", 254 - strlen(newpath));
             strncat(newpath, entry->d_name, 254 - strlen(newpath));
-            recursive_add_to_array(array, inlen, inmaxlen, newpath);
+            recursive_add_to_array(array, newpath);
         }
         closedir(d);
     }
-    else if(s.st_mode & S_IFREG)
-    { // File
-        array[*inlen] = (char*) path;
-        *inlen += 1;
-    }
+    else if(s.st_mode & S_IFREG) // File
+        ll_add(array, path);
 #ifndef _WIN32
-    else if(s.st_mode & S_IFLNK)
-    { // Symlink
-        array[*inlen] = (char*) path;
-        *inlen += 1;
-    }
+    else if(s.st_mode & S_IFLNK) // Symlink
+        ll_add(array, path);
 #endif
     else
     {
