@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         bool verbose = (strchr(argv[1], 'v') != NULL);
         bool no_gid_uid = false, no_mode = false;
         int i, archiven;
-        char *archivep;
+        char *archivep = NULL;
         for(i = 2; i < argc; i++)
         {
             if(argv[i][0] != '-')
