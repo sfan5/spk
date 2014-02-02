@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define BUFFER_SIZE 4096
+
 #ifndef _WIN32
 char *readlink_malloc(const char *filename)
 {
@@ -36,8 +38,7 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool verbose, bool no_
     if(of == NULL) return SPK_E_FAILEDOPEN;
     const char* temp1 = SPK_MAGIC;
     struct stat s;
-    int i;
-    uint32_t j;
+    int i, j;
     spk_fileheader_t *fh = malloc(sizeof(spk_fileheader_t));
     if(fh == NULL) return SPK_E_UNKNOWN;
 
@@ -97,9 +98,12 @@ short create_spk_ex(char *outfile, int inlen, char *in[], bool verbose, bool no_
             if(f == NULL) return SPK_E_FAILEDOPEN;
             fh->length = (uint32_t) s.st_size;
             fwrite(fh, sizeof(spk_fileheader_t), 1, of);
-            for(j = 0; j < fh->length; j++)
+            char buf[BUFFER_SIZE];
+            while(1)
             {
-                fputc(fgetc(f), of);
+                j = fread(buf, 1, BUFFER_SIZE, f);
+                if(j == 0) break;
+                fwrite(buf, j, 1, of);
             }
             fclose(f);
         }

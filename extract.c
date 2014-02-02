@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <stdio.h>
 
+#define BUFFER_SIZE 4096
+
 short extract_spk(char *filename, char *outdir)
 {
     return extract_spk_ex(filename, outdir, false, false, false);
@@ -13,6 +15,7 @@ short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid
     FILE *f, *of;
     spk_fileheader_t *fh = malloc(sizeof(spk_fileheader_t));
     char *outpath = malloc(512);
+    int j;
     uint32_t i;
     char temp1[SPK_MAGIC_LEN];
     const char* temp2 = SPK_MAGIC;
@@ -23,7 +26,7 @@ short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid
     if(memcmp(temp1, temp2, SPK_MAGIC_LEN)) return SPK_E_NOTANSPKFILE;
     while(1)
     {
-        i = (uint32_t) fgetc(f);
+        i = (uint32_t) fgetc(f); // Check for EOF
         if(feof(f)) break; else ungetc((int) i, f);
 
         fread(fh, sizeof(spk_fileheader_t), 1, f);
@@ -38,12 +41,17 @@ short extract_spk_ex(char *filename, char *outdir, bool verbose, bool ignore_gid
         {
             of = fopen(outpath, "wb");
             if(of == NULL) return SPK_E_FAILEDOPEN;
-            i = 0;
-            while(i < fh->length)
+            char buf[BUFFER_SIZE];
+            i = fh->length;
+            while(i != 0)
             {
                 if(feof(f)) return SPK_E_CORRUPTFILE;
-                fputc(fgetc(f), of);
-                i++;
+                if(i > BUFFER_SIZE)
+                    j = fread(buf, 1, BUFFER_SIZE, f);
+                else
+                    j = fread(buf, 1, i, f);
+                fwrite(buf, j, 1, of);
+                i -= j;
             }
             fclose(of);
             if(fh->mode != 0xffff && !ignore_mode) chmod(outpath, (mode_t) fh->mode);
