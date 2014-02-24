@@ -1,5 +1,5 @@
 #ifndef SPK_FORMAT_H
-#define SPK_FOMART_H
+#define SPK_FORMAT_H
 
 #include <inttypes.h>
 
