@@ -4,4 +4,7 @@ all:
 clean:
 	./clean.sh
 
-.PHONY: all clean
+install:
+	./install.sh
+
+.PHONY: all clean install
