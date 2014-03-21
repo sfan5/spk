@@ -11,7 +11,7 @@ typedef struct ll_node {
     struct ll_node *next;
 } ll_node;
 
-void ll_add(ll_node *array, const char *v);
+static inline void ll_add(ll_node *array, const char *v);
 
 void print_usage();
 void recursive_add_to_array(ll_node *array, const char *path);
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     return (co == SPK_E_OK)?EXIT_SUCCESS:EXIT_FAILURE;
 }
 
-void ll_add(ll_node *array, const char *v)
+static inline void ll_add(ll_node *array, const char *v)
 {
     ll_node *c, *n;
     c = array;
