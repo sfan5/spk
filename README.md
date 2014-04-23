@@ -1,7 +1,7 @@
 SimplePack (SPK)
 ===============
 
-The spk archiving format is a developer-friendly(read: easy to use, even without libspk) for archiving files and directories.
+The spk archiving format is a developer-friendly(read: easy to use, even without libspk) format for archiving files and directories.
 
 File format
 -----------
