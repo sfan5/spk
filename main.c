@@ -177,15 +177,15 @@ void recursive_add_to_array(ll_node *array, const char *path)
 void print_usage()
 {
 #if defined(__clang__)
-    const char *cv = "Clang";
+    const char *cv = "clang";
 #elif defined(__GNUC__)
     const char *cv = "gcc";
 #elif defined(_MSC_VER)
     const char *cv = "MS Visual Studio";
 #else
-    const char *cv = "unknown compiler";
+    const char *cv = "???";
 #endif
-    printf("spk version " SPK_VERSION_S " (compiled %s %s with %s %s)\n", __DATE__, __TIME__, cv, __VERSION__); 
+    printf("spk version " SPK_VERSION_S " (compiled on %s at %s with %s %s)\n", __DATE__, __TIME__, cv, __VERSION__);
     printf("Usage: spk (cx)[v] [options] <archive> [files] ...\n");
     printf("spk packs files and directories in a developer-friendly format.\n\n");
     printf("Valid options:\n");
